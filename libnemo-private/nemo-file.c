@@ -9059,6 +9059,15 @@ nemo_file_add_string_attribute (NemoFile *file,
 	nemo_file_changed (file);
 }
 
+static void
+nemo_file_set_sort_order (NemoFile *file,
+				    int value)
+{
+	// XXX: Can't create info without having a callback, and I have no idea how to construct a callback
+	g_file_info_set_attribute_int32 (info, G_FILE_ATTRIBUTE_STANDARD_SORT_ORDER, value);
+	file->details->sort_order = value;
+}
+
 gboolean
 nemo_file_add_search_result_data (NemoFile         *file,
                                   gpointer          search_dir,
@@ -9196,6 +9205,8 @@ nemo_file_info_iface_init (NemoFileInfoInterface *iface)
 	iface->add_emblem = nemo_file_add_emblem;
 	iface->get_string_attribute = nemo_file_get_string_attribute;
 	iface->add_string_attribute = nemo_file_add_string_attribute;
+	iface->get_sort_order = nemo_file_get_sort_order;
+	iface->set_sort_order = nemo_file_set_sort_order;
 	iface->invalidate_extension_info = nemo_file_invalidate_extension_info;
 }
 

@@ -281,6 +281,26 @@ nemo_file_info_add_string_attribute (NemoFileInfo *file,
 		(file, attribute_name, value);
 }
 
+int
+nemo_file_info_get_sort_order (NemoFileInfo *file)
+{
+	g_return_val_if_fail (NEMO_IS_FILE_INFO (file), 0);
+	g_return_val_if_fail (NEMO_FILE_INFO_GET_IFACE (file)->get_sort_order != NULL, 0);
+
+	return NEMO_FILE_INFO_GET_IFACE (file)->get_sort_order (file);
+}
+
+void
+nemo_file_info_set_sort_order (NemoFileInfo *file,
+					 int value)
+{
+	g_return_if_fail (NEMO_IS_FILE_INFO (file));
+	g_return_if_fail (NEMO_FILE_INFO_GET_IFACE (file)->set_sort_order != NULL);
+	g_return_if_fail (value != NULL);
+	
+	NEMO_FILE_INFO_GET_IFACE (file)->set_sort_order (file, value);
+}
+
 /**
  * nemo_file_info_invalidate_extension_info:
  * @file: a #NemoFile

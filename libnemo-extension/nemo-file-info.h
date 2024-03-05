@@ -69,6 +69,9 @@ struct _NemoFileInfoInterface
 	void              (*add_string_attribute) (NemoFileInfo *file,
 						   const char       *attribute_name,
 						   const char       *value);
+	int               (*get_sort_order)       (NemoFileInfo *file);
+	void              (*set_sort_order)       (NemoFileInfo *file,
+						   int              value);
 	void              (*invalidate_extension_info) (NemoFileInfo *file);
 	
 	char *            (*get_activation_uri)   (NemoFileInfo *file);
@@ -120,6 +123,9 @@ char *            nemo_file_info_get_string_attribute (NemoFileInfo *file,
 void              nemo_file_info_add_string_attribute (NemoFileInfo *file,
 							   const char       *attribute_name,
 							   const char       *value);
+int               nemo_file_info_get_sort_order       (NemoFileInfo *file);
+void              nemo_file_info_set_sort_order       (NemoFileInfo *file,
+							   int              value);
 
 /* Invalidating file info */
 void              nemo_file_info_invalidate_extension_info (NemoFileInfo *file);
