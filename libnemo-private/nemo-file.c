@@ -2262,6 +2262,79 @@ access_ok (const gchar *path)
     return TRUE;
 }
 
+#define NEMO_METADATA_NEMO_SORT_ORDER "metadata::nemo-sort-order"
+static int
+get_sort_order_from_gvfs (NemoFile *file,
+		      GFileInfo *info)
+{
+	int standard_sort_order;
+	char *metadata_sort_order;
+	long sort_order_0;
+	long sort_order_10;
+	long sort_order_as_long;
+	int sort_order;
+
+	g_return_val_if_fail (NEMO_IS_FILE (file), 0);
+
+	/* If standard::sort-order has changed since the last time metadata::nemo-sort-order was changed,
+	 * it should take precedence.
+	 */
+	// If standard::sort-order is not 0, it should take precedence
+	standard_sort_order = g_file_info_get_attribute_int32 (info, G_FILE_ATTRIBUTE_STANDARD_SORT_ORDER);
+	if (standard_sort_order != 0) {
+		return standard_sort_order;
+	}
+
+	metadata_sort_order = g_file_info_get_attribute_string (info, NEMO_METADATA_NEMO_SORT_ORDER);
+	if (metadata_sort_order == NULL)
+	{
+		metadata_sort_order = "";
+	}
+
+	/* Allow decimal and hexadecimal, but not octal.
+	 * If the string does not start with 0, then strtol(0) == strtol(10)
+	 * Else if the string starts with 0x, then abs(strtol(0)) > abs(strtol(10))
+	 *     (strtol(10) == 0, because the 'x' cuts it off)
+	 * Else if the string starts with 0, then abs(strtol(0)) < abs(strtol(10))
+	 *     (a sequence of digits base 8 is always less than the same sequence of digits base 10,
+	 *     for instance "13" base 8 = 1*8^1 + 3*8^0 = 11 base 10 < 13 base 10)
+	 * Therefore, to screen out octal, compare abs(strtol(0)) and abs(strtol(10))
+	 */
+	sort_order_0 =  strtol(metadata_sort_order, NULL, 0);
+	sort_order_10 = strtol(metadata_sort_order, NULL, 10);
+	// Don't actually use abs, it could cause problems with abs(LONG_MIN)
+	if (sort_order_0 >= 0) {
+		if (sort_order_0 < sort_order_10) {
+			// strtol(0) was octal, use decimal strtol(10)
+			sort_order_as_long = sort_order_10;
+		} else {
+			// strtol(0) was decimal or hexadecimal, use strtol(0)
+			sort_order_as_long = sort_order_0;
+		}
+	} else {
+		// sort_order_0 < 0
+		if (sort_order_0 > sort_order_10) {
+			// strtol(0) was octal (closer to 0), use decimal strtol(10)
+			sort_order_as_long = sort_order_10;
+		} else {
+			// strtol(0) was decimal or hexadecimal, use strtol(0)
+			sort_order_as_long = sort_order_0;
+		}
+	}
+
+	/* There is no strtoi function, only strtol, so we have to clamp to INT_MIN/INT_MAX ourselves
+	 */
+	if (sort_order_as_long > INT_MAX) {
+		sort_order = INT_MAX;
+	} else if (sort_order_as_long < INT_MIN) {
+		sort_order = INT_MIN;
+	} else {
+		sort_order = sort_order_as_long;
+	}
+
+	return sort_order;
+}
+
 static gboolean
 update_info_internal (NemoFile *file,
 		      GFileInfo *info,
@@ -2566,7 +2639,7 @@ update_info_internal (NemoFile *file,
 	}
 	file->details->size = size;
 
-    sort_order = g_file_info_get_attribute_int32 (info, G_FILE_ATTRIBUTE_STANDARD_SORT_ORDER);
+    sort_order = get_sort_order_from_gvfs (file, info);
 
 	if (file->details->sort_order != sort_order) {
 		changed = TRUE;
