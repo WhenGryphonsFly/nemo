@@ -1,4 +1,4 @@
-nemo (6.0.3~spectrumtest12) virginia; urgency=medium
+nemo (6.0.3~spectrumtest13) virginia; urgency=medium
 
   [ Michael Webster ]
   * nemo-file.c: Escape tooltip text for markup before adding any search result snippet.

@@ -2267,7 +2267,6 @@ static int
 get_sort_order_from_gvfs (NemoFile *file,
 		      GFileInfo *info)
 {
-	int standard_sort_order;
 	char *metadata_sort_order;
 	long sort_order_0;
 	long sort_order_10;
@@ -2276,19 +2275,14 @@ get_sort_order_from_gvfs (NemoFile *file,
 
 	g_return_val_if_fail (NEMO_IS_FILE (file), 0);
 
-	/* If standard::sort-order has changed since the last time metadata::nemo-sort-order was changed,
-	 * it should take precedence.
-	 */
-	// If standard::sort-order is not 0, it should take precedence
-	standard_sort_order = g_file_info_get_attribute_int32 (info, G_FILE_ATTRIBUTE_STANDARD_SORT_ORDER);
-	if (standard_sort_order != 0) {
-		return standard_sort_order;
-	}
-
 	metadata_sort_order = g_file_info_get_attribute_string (info, NEMO_METADATA_NEMO_SORT_ORDER);
 	if (metadata_sort_order == NULL)
 	{
 		metadata_sort_order = "";
+	}
+	// If metadata::nemo-sort-order is empty, default to standard::sort-order
+	if (metadata_sort_order[0] == '\0') {
+		return g_file_info_get_attribute_int32 (info, G_FILE_ATTRIBUTE_STANDARD_SORT_ORDER);
 	}
 
 	/* Allow decimal and hexadecimal, but not octal.
